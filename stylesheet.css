@@ -1,62 +1,124 @@
 /* ==========================================================================
    Gunhee Kim — personal site
-   Fonts are loaded via <link> in <head> (faster than @import).
+
+   Built against the apple-design principles (WWDC "Designing Fluid
+   Interfaces" / "The Details of UI Typography"):
+     - feedback lives on pointer-down, never only on release
+     - tracking and leading are size-specific, never one value for all sizes
+     - the system font ships its own optical sizing — use it unless there's
+       a reason not to
+     - spacing in rem so layout scales with the user's text-size setting
+     - floating chrome is a translucent material, not an opaque strip
+     - respect reduced-motion, reduced-transparency, and high-contrast
    ========================================================================== */
 
 /* ---------- Design tokens ---------- */
 :root {
   color-scheme: light;
 
-  --bg: #f4f6fb;
-  --bg-glow: rgba(96, 140, 255, 0.10);
+  /* Surfaces — Apple's neutral grays; color is never the point */
+  --bg: #fbfbfd;
+  --bg-glow: rgba(105, 118, 145, 0.07);
   --surface: #ffffff;
-  --surface-2: #eef2f9;
-  --text: #12161f;
-  --muted: #5b6577;
-  --faint: #8892a4;
-  --line: #e5e9f1;
-  --line-strong: #d6dce8;
-  --brand: #2f5fe0;
-  --brand-strong: #1c44b4;
+  --surface-2: #f5f5f7;
+
+  /* Labels — primary / secondary / tertiary, mirroring Apple's semantics */
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --faint: #86868b;
+
+  /* Separators are alpha, not solid, so they sit on any surface */
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.14);
+
+  --brand: #0066cc;
+  --brand-strong: #004e9e;
   --brand-contrast: #ffffff;
-  --brand-soft: rgba(47, 95, 224, 0.10);
-  --accent: #f6873a;
-  --venue-accepted: #1c44b4;
+  --brand-soft: rgba(0, 102, 204, 0.08);
 
-  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04), 0 3px 10px rgba(17, 24, 39, 0.05);
-  --shadow-md: 0 10px 30px rgba(17, 24, 39, 0.08);
-  --shadow-lg: 0 24px 55px rgba(17, 24, 39, 0.12);
+  /* Venue badges. Every pairing below clears WCAG AA (4.5:1) at 12px —
+     these are small text, so they don't qualify for the large-text 3:1 rule. */
+  --badge-accepted-bg: rgba(0, 102, 204, 0.08);
+  --badge-accepted-line: rgba(0, 102, 204, 0.22);
 
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 12px;
+  /* Translucent material for floating chrome (§12) */
+  --material: rgba(255, 255, 255, 0.72);
+  --material-edge: rgba(255, 255, 255, 0.8);
+  --material-blur: blur(20px) saturate(180%);
 
-  --maxw: 960px;
+  /* Bigger surfaces read as thicker: more blur, deeper shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.06), 0 20px 48px rgba(0, 0, 0, 0.1);
+
+  /* Radii in rem so they grow with the user's text size */
+  --radius-xl: 1.5rem;
+  --radius-lg: 1.125rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.625rem;
+  --radius-pill: 999px;
+
+  /* Tracking — negative as type grows, slightly positive as it shrinks (§15) */
+  --track-display: -0.022em;
+  --track-title: -0.015em;
+  --track-heading: -0.008em;
+  --track-body: 0em;
+  --track-small: 0.008em;
+  --track-caps: 0.07em;
+
+  /* Leading — tight on large text, loose on body (§15) */
+  --lead-display: 1.05;
+  --lead-title: 1.15;
+  --lead-heading: 1.3;
+  --lead-body: 1.55;
+  --lead-small: 1.45;
+
+  /* Motion. Critically damped settle — no overshoot, because nothing here
+     carries gesture momentum (§4). Reverse is the mirrored curve (§7). */
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-settle-reverse: cubic-bezier(1, 0, 0.68, 0.28);
+  --dur-press: 100ms;
+  --dur-fast: 200ms;
+  --dur-color: 250ms;
+  --dur-enter: 400ms;
+
+  --maxw: 60rem;
+  --touch-min: 2.75rem; /* 44px — Apple's minimum target */
 }
 
 /* Dark theme — explicit (set by the toggle / head script) */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #0b0e16;
-  --bg-glow: rgba(88, 120, 220, 0.16);
-  --surface: #141926;
-  --surface-2: #1b2231;
-  --text: #e8ecf5;
-  --muted: #9aa4b8;
-  --faint: #6c7689;
-  --line: #232b3b;
-  --line-strong: #303a4e;
-  --brand: #7ba2ff;
-  --brand-strong: #a6c2ff;
-  --brand-contrast: #0b0e16;
-  --brand-soft: rgba(123, 162, 255, 0.15);
-  --accent: #ff9d57;
-  --venue-accepted: #a6c2ff;
+  --bg: #000000;
+  --bg-glow: rgba(120, 145, 200, 0.12);
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 12px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 26px 60px rgba(0, 0, 0, 0.5);
+  --text: #f5f5f7;
+  --muted: rgba(235, 235, 245, 0.6);
+  --faint: rgba(235, 235, 245, 0.38);
+
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+
+  --brand: #2997ff;
+  --brand-strong: #6cb7ff;
+  --brand-contrast: #000000;
+  --brand-soft: rgba(41, 151, 255, 0.16);
+
+  /* 12% rather than 16%: at 16% the tint lifts the backdrop enough to drop
+     the badge to 4.49:1, just under AA. */
+  --badge-accepted-bg: rgba(41, 151, 255, 0.12);
+  --badge-accepted-line: rgba(41, 151, 255, 0.3);
+
+  --material: rgba(28, 28, 30, 0.72);
+  --material-edge: rgba(255, 255, 255, 0.12);
+
+  /* On black, shadows barely read — separation comes from the borders */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
 }
 
 /* Dark theme — automatic fallback when JS is disabled */
@@ -64,25 +126,32 @@
   :root:not([data-theme]) {
     color-scheme: dark;
 
-    --bg: #0b0e16;
-    --bg-glow: rgba(88, 120, 220, 0.16);
-    --surface: #141926;
-    --surface-2: #1b2231;
-    --text: #e8ecf5;
-    --muted: #9aa4b8;
-    --faint: #6c7689;
-    --line: #232b3b;
-    --line-strong: #303a4e;
-    --brand: #7ba2ff;
-    --brand-strong: #a6c2ff;
-    --brand-contrast: #0b0e16;
-    --brand-soft: rgba(123, 162, 255, 0.15);
-    --accent: #ff9d57;
-    --venue-accepted: #a6c2ff;
+    --bg: #000000;
+    --bg-glow: rgba(120, 145, 200, 0.12);
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 12px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 26px 60px rgba(0, 0, 0, 0.5);
+    --text: #f5f5f7;
+    --muted: rgba(235, 235, 245, 0.6);
+    --faint: rgba(235, 235, 245, 0.38);
+
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.2);
+
+    --brand: #2997ff;
+    --brand-strong: #6cb7ff;
+    --brand-contrast: #000000;
+    --brand-soft: rgba(41, 151, 255, 0.16);
+
+    --badge-accepted-bg: rgba(41, 151, 255, 0.12);
+    --badge-accepted-line: rgba(41, 151, 255, 0.3);
+
+    --material: rgba(28, 28, 30, 0.72);
+    --material-edge: rgba(255, 255, 255, 0.12);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -98,22 +167,43 @@ body {
 }
 
 body {
-  font-family: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* The platform font already ships optical sizing, tracking tables, and
+     legibility tuning — no web font earns its round trip here. */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, "Helvetica Neue", Arial, sans-serif;
+  font-size: 100%;
+  line-height: var(--lead-body);
+  letter-spacing: var(--track-body);
+  font-optical-sizing: auto;
   color: var(--text);
-  background:
-    radial-gradient(1100px 520px at 50% -12%, var(--bg-glow), transparent 70%),
-    var(--bg);
-  background-attachment: fixed;
-  line-height: 1.65;
+  /* No background-attachment: fixed — it forces repaints and janks scroll
+     on mobile Safari (§11). */
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color var(--dur-color) var(--ease-settle),
+    color var(--dur-color) var(--ease-settle);
+}
+
+/* The ambient glow as its own fixed layer: no scroll cost, no repaint. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    68.75rem 32.5rem at 50% -12%,
+    var(--bg-glow),
+    transparent 70%
+  );
+  transition: background var(--dur-color) var(--ease-settle);
 }
 
 a {
   color: var(--brand);
   text-decoration: none;
-  transition: color 0.18s ease;
+  transition: color var(--dur-fast) var(--ease-settle);
 }
 
 a:hover,
@@ -124,7 +214,15 @@ a:focus-visible {
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
-  border-radius: 5px;
+  border-radius: 0.3125rem;
+}
+
+/* Interactive elements own their press feedback, so suppress the platform's
+   tap flash and the legacy ~300ms tap delay (§1, §10). */
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ---------- Skip link (keyboard users) ---------- */
@@ -136,11 +234,12 @@ a:focus-visible {
   background: var(--brand);
   color: var(--brand-contrast);
   padding: 0.55rem 1.1rem;
-  border-radius: 0 0 12px 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: var(--track-small);
   z-index: 40;
-  transition: transform 0.2s ease;
+  transition: transform var(--dur-fast) var(--ease-settle);
 }
 
 .skip-link:focus {
@@ -149,36 +248,50 @@ a:focus-visible {
   outline: none;
 }
 
-/* ---------- Theme toggle ---------- */
+/* ---------- Theme toggle — a translucent material, not an opaque chip ----- */
 .theme-toggle {
   position: fixed;
-  top: 1.1rem;
-  right: 1.1rem;
+  top: 1rem;
+  right: 1rem;
   z-index: 30;
-  width: 42px;
-  height: 42px;
+  width: var(--touch-min);
+  height: var(--touch-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 1px solid var(--line-strong);
-  background: var(--surface);
+  /* Bright top edge reads as light catching the material (§12) */
+  border-top-color: var(--material-edge);
+  background: var(--material);
+  -webkit-backdrop-filter: var(--material-blur);
+  backdrop-filter: var(--material-blur);
   color: var(--text);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition: transform var(--dur-fast) var(--ease-settle-reverse),
+    color var(--dur-color) var(--ease-settle),
+    border-color var(--dur-color) var(--ease-settle);
 }
 
 .theme-toggle:hover,
 .theme-toggle:focus-visible {
   color: var(--brand);
   border-color: var(--brand);
-  transform: translateY(-2px) rotate(-10deg);
+  /* No rotation flourish — restraint. Motion should mean something. */
+  transform: translateY(-1px);
+  transition-timing-function: var(--ease-settle);
+}
+
+/* Feedback on the press, instantly (§1) */
+.theme-toggle:active {
+  transform: scale(0.94);
+  transition-duration: var(--dur-press);
 }
 
 .theme-toggle svg {
-  width: 19px;
-  height: 19px;
+  width: 1.1875rem;
+  height: 1.1875rem;
 }
 
 .icon-sun {
@@ -196,7 +309,7 @@ a:focus-visible {
 /* ---------- Layout ---------- */
 .page-shell {
   width: min(var(--maxw), calc(100% - 2rem));
-  margin: 2.6rem auto 3rem;
+  margin: 2.75rem auto 3rem;
   position: relative;
 }
 
@@ -204,70 +317,82 @@ a:focus-visible {
 .hero-card {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 2.2rem;
+  gap: 2.25rem;
   align-items: center;
   padding: clamp(1.5rem, 3vw, 2.5rem);
   border-radius: var(--radius-xl);
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-lg);
+  transition: background-color var(--dur-color) var(--ease-settle),
+    border-color var(--dur-color) var(--ease-settle);
 }
 
+/* Small text takes slightly positive tracking to stay legible (§15) */
 .eyebrow {
   margin: 0 0 0.5rem;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
+  line-height: var(--lead-small);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  color: var(--brand-strong);
+  letter-spacing: var(--track-caps);
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .name {
-  margin: 0 0 0.85rem;
-  font-weight: 800;
-  font-size: clamp(2.1rem, 4.2vw, 3.1rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+  font-size: clamp(2.25rem, 4.4vw, 3.25rem);
+  line-height: var(--lead-display);
+  letter-spacing: var(--track-display);
 }
 
 .bio {
   margin: 0;
   color: var(--muted);
-  font-size: 1.02rem;
+  font-size: 1.0625rem; /* 17px — the platform body size */
+  line-height: var(--lead-body);
   max-width: 56ch;
 }
 
 .bio a {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .contact-links {
-  margin-top: 1.4rem;
+  margin-top: 1.375rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .chip-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.46rem 0.92rem;
-  border-radius: 999px;
+  gap: 0.4375rem;
+  min-height: 2.25rem;
+  padding: 0.4375rem 0.9375rem;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--line-strong);
   background: var(--surface);
-  font-size: 0.87rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: var(--lead-small);
+  letter-spacing: var(--track-small);
+  font-weight: 500;
+  white-space: nowrap;
   color: var(--text);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.16s ease, border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+  transition: transform var(--dur-fast) var(--ease-settle-reverse),
+    border-color var(--dur-color) var(--ease-settle),
+    color var(--dur-color) var(--ease-settle),
+    background-color var(--dur-color) var(--ease-settle);
 }
 
 .chip-link svg {
-  width: 15px;
-  height: 15px;
+  width: 0.9375rem;
+  height: 0.9375rem;
   flex: none;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
 .chip-link:hover,
@@ -275,20 +400,26 @@ a:focus-visible {
   color: var(--brand);
   border-color: var(--brand);
   background: var(--brand-soft);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  transition-timing-function: var(--ease-settle);
+}
+
+.chip-link:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press);
 }
 
 .hero-photo-wrap {
   justify-self: center;
-  width: min(280px, 100%);
+  width: min(17.5rem, 100%);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   box-shadow: var(--shadow-md);
-  transition: transform 0.3s ease;
+  transition: transform var(--dur-enter) var(--ease-settle);
 }
 
 .hero-photo-wrap:hover {
-  transform: translateY(-4px) scale(1.01);
+  transform: translateY(-3px);
 }
 
 .hero-photo {
@@ -302,28 +433,30 @@ a:focus-visible {
 
 /* ---------- Sections ---------- */
 .section {
-  margin-top: 2.6rem;
+  margin-top: 2.75rem;
 }
 
 .section-head {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.15rem;
+  margin-bottom: 1.125rem;
 }
 
+/* A separator that fades out rather than ruling all the way across */
 .section-head::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--line);
+  background: linear-gradient(90deg, var(--line-strong), transparent);
 }
 
 h2 {
   margin: 0;
-  font-weight: 800;
-  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+  line-height: var(--lead-title);
+  letter-spacing: var(--track-title);
 }
 
 /* ---------- News ---------- */
@@ -332,22 +465,25 @@ h2 {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.7rem;
+  gap: 0.625rem;
 }
 
 .news-item {
   position: relative;
   display: grid;
-  grid-template-columns: 104px 1fr;
-  gap: 0.9rem;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.875rem;
   align-items: baseline;
-  padding: 0.9rem 1.1rem;
+  padding: 0.875rem 1.0625rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform var(--dur-fast) var(--ease-settle-reverse),
+    box-shadow var(--dur-fast) var(--ease-settle),
+    border-color var(--dur-color) var(--ease-settle),
+    background-color var(--dur-color) var(--ease-settle);
 }
 
 .news-item::before {
@@ -359,13 +495,14 @@ h2 {
   width: 3px;
   background: var(--brand);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--dur-fast) var(--ease-settle);
 }
 
 .news-item:hover {
   transform: translateX(2px);
   border-color: var(--line-strong);
   box-shadow: var(--shadow-md);
+  transition-timing-function: var(--ease-settle);
 }
 
 .news-item:hover::before {
@@ -373,29 +510,34 @@ h2 {
 }
 
 .news-date {
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: var(--lead-small);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--brand-strong);
+  letter-spacing: var(--track-caps);
+  color: var(--faint);
 }
 
 .news-item p {
   margin: 0;
-  font-size: 0.96rem;
+  font-size: 0.9375rem;
+  line-height: var(--lead-body);
   color: var(--text);
 }
 
 /* ---------- Research / papers ---------- */
 .paper-card {
   display: grid;
-  grid-template-columns: 232px 1fr;
+  grid-template-columns: 14.5rem 1fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
   background: var(--surface);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform var(--dur-fast) var(--ease-settle-reverse),
+    box-shadow var(--dur-fast) var(--ease-settle),
+    border-color var(--dur-color) var(--ease-settle),
+    background-color var(--dur-color) var(--ease-settle);
 }
 
 .paper-card + .paper-card {
@@ -403,41 +545,45 @@ h2 {
 }
 
 .paper-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   border-color: var(--line-strong);
   box-shadow: var(--shadow-lg);
+  transition-timing-function: var(--ease-settle);
 }
 
 .paper-media {
   background: var(--surface-2);
-  padding: 14px;
+  padding: 0.875rem;
   display: flex;
+  transition: background-color var(--dur-color) var(--ease-settle);
 }
 
+/* Concentric radii: inner + padding ≈ outer (0.625 + 0.875 ≈ 1.125rem) */
 .paper-media img,
 .paper-media video {
   width: 100%;
   height: 100%;
-  max-height: 210px;
+  max-height: 13.125rem;
   object-fit: cover;
   object-position: center;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   display: block;
 }
 
 .paper-media video {
-  background: #101826;
+  background: var(--surface-2);
 }
 
 .paper-content {
-  padding: 1.15rem 1.3rem 1.25rem;
+  padding: 1.125rem 1.3125rem 1.25rem;
 }
 
 .papertitle {
   margin: 0;
-  font-size: 1.09rem;
-  font-weight: 700;
-  line-height: 1.35;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: var(--lead-heading);
+  letter-spacing: var(--track-heading);
 }
 
 .papertitle a {
@@ -453,8 +599,9 @@ h2 {
 .paper-venue,
 .paper-links,
 .paper-summary {
-  margin: 0.6rem 0 0;
-  font-size: 0.94rem;
+  margin: 0.5625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: var(--lead-body);
 }
 
 .paper-authors {
@@ -463,25 +610,41 @@ h2 {
 
 .paper-authors strong {
   color: var(--text);
+  font-weight: 600;
 }
 
+/* Venue line — metadata is a squared badge, actions are pills. Shape carries
+   the distinction, so the venue never reads as a link the way colored text did. */
 .paper-venue {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.venue-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 0.3125rem;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: var(--lead-small);
+  letter-spacing: var(--track-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.venue-badge.is-accepted {
+  color: var(--brand);
+  background: var(--badge-accepted-bg);
+  border-color: var(--badge-accepted-line);
+}
+
+.venue-badge.is-preprint {
   color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.paper-venue em {
-  font-style: normal;
-  font-weight: 700;
-}
-
-/* Preprints (arXiv) vs. accepted venues (CVPR, ECCV, ...) */
-.paper-venue .venue-preprint {
-  color: var(--muted);
-}
-
-.paper-venue .venue-accepted {
-  color: var(--venue-accepted);
+  background: transparent;
+  border-color: var(--line-strong);
 }
 
 .paper-links {
@@ -493,14 +656,20 @@ h2 {
 .paper-links a {
   display: inline-flex;
   align-items: center;
-  padding: 0.28rem 0.78rem;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
+  min-height: 1.875rem;
+  padding: 0.25rem 0.8125rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
   background: var(--surface-2);
-  font-size: 0.81rem;
-  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: var(--lead-small);
+  letter-spacing: var(--track-small);
+  font-weight: 500;
   color: var(--muted);
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: transform var(--dur-fast) var(--ease-settle-reverse),
+    background-color var(--dur-fast) var(--ease-settle),
+    border-color var(--dur-fast) var(--ease-settle),
+    color var(--dur-fast) var(--ease-settle);
 }
 
 .paper-links a:hover,
@@ -508,7 +677,12 @@ h2 {
   background: var(--brand);
   border-color: var(--brand);
   color: var(--brand-contrast);
-  transform: translateY(-1px);
+  transition-timing-function: var(--ease-settle);
+}
+
+.paper-links a:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-press);
 }
 
 .paper-summary {
@@ -517,10 +691,12 @@ h2 {
 
 /* ---------- Footer ---------- */
 .site-footer {
-  margin: 2.8rem 0 0.5rem;
-  padding-top: 1.4rem;
+  margin: 2.75rem 0 0.5rem;
+  padding-top: 1.375rem;
   border-top: 1px solid var(--line);
-  font-size: 0.86rem;
+  font-size: 0.875rem;
+  line-height: var(--lead-small);
+  letter-spacing: var(--track-small);
   text-align: center;
   color: var(--faint);
 }
@@ -528,16 +704,16 @@ h2 {
 /* ---------- Reveal on load ---------- */
 .reveal {
   opacity: 0;
-  transform: translateY(16px);
-  animation: reveal-in 0.6s ease forwards;
+  transform: translateY(0.75rem);
+  animation: reveal-in var(--dur-enter) var(--ease-settle) forwards;
 }
 
 .news-section.reveal {
-  animation-delay: 0.08s;
+  animation-delay: 80ms;
 }
 
 .section.reveal {
-  animation-delay: 0.14s;
+  animation-delay: 140ms;
 }
 
 @keyframes reveal-in {
@@ -547,7 +723,9 @@ h2 {
   }
 }
 
-/* ---------- Motion preferences ---------- */
+/* ---------- Motion preferences ----------
+   Reduced motion means a gentler equivalent, not no feedback: the entrance
+   becomes a plain cross-fade and positional hovers stop moving (§14). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -562,14 +740,78 @@ h2 {
     opacity: 1 !important;
     transform: none !important;
   }
+
+  .hero-photo-wrap:hover,
+  .theme-toggle:hover,
+  .chip-link:hover,
+  .news-item:hover,
+  .paper-card:hover {
+    transform: none;
+  }
+
+  /* Color feedback still reads without vestibular motion */
+  .theme-toggle:active,
+  .chip-link:active,
+  .paper-links a:active {
+    transform: none;
+    background: var(--brand-soft);
+  }
+}
+
+/* ---------- Transparency preference ----------
+   Frostier means solid: raise the opacity and drop the blur (§14). */
+@media (prefers-reduced-transparency: reduce) {
+  .theme-toggle {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-top-color: var(--line-strong);
+  }
+}
+
+/* ---------- Contrast preference ----------
+   Near-solid backgrounds with defined, contrasting borders (§14). */
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #4b4b4f;
+    --faint: #5c5c60;
+    --line: rgba(0, 0, 0, 0.28);
+    --line-strong: rgba(0, 0, 0, 0.45);
+    --brand: #004e9e;
+    --brand-strong: #003a76;
+  }
+
+  :root[data-theme="dark"] {
+    --muted: rgba(235, 235, 245, 0.86);
+    --faint: rgba(235, 235, 245, 0.72);
+    --line: rgba(255, 255, 255, 0.3);
+    --line-strong: rgba(255, 255, 255, 0.5);
+    --brand: #6cb7ff;
+    --brand-strong: #a6d2ff;
+  }
+
+  .theme-toggle {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .paper-links a {
+    border-color: var(--line-strong);
+    color: var(--text);
+  }
+
+  body::before {
+    display: none;
+  }
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 860px) {
+@media (max-width: 53.75rem) {
   .hero-card {
     grid-template-columns: 1fr;
     text-align: center;
-    gap: 1.4rem;
+    gap: 1.375rem;
   }
 
   .bio {
@@ -582,7 +824,7 @@ h2 {
 
   .hero-photo-wrap {
     grid-row: 1;
-    width: min(220px, 60vw);
+    width: min(13.75rem, 60vw);
   }
 
   .paper-card {
@@ -591,32 +833,33 @@ h2 {
 
   .paper-media img,
   .paper-media video {
-    max-height: 260px;
+    max-height: 16.25rem;
   }
 
   .news-item {
     grid-template-columns: 1fr;
-    gap: 0.35rem;
+    gap: 0.3125rem;
   }
 }
 
-@media (max-width: 540px) {
+/* Touch: every target clears 44px (§10) */
+@media (max-width: 33.75rem) {
   .page-shell {
-    width: min(var(--maxw), calc(100% - 1.4rem));
-    margin-top: 1.4rem;
+    width: min(var(--maxw), calc(100% - 1.375rem));
+    margin-top: 1.375rem;
   }
 
   .hero-card {
-    padding: 1.3rem 1.1rem 1.5rem;
-    border-radius: 20px;
+    padding: 1.3125rem 1.0625rem 1.5rem;
+    border-radius: 1.25rem;
   }
 
   .name {
-    font-size: clamp(1.8rem, 8vw, 2.2rem);
+    font-size: clamp(1.875rem, 8vw, 2.25rem);
   }
 
   .hero-photo-wrap {
-    width: min(190px, 58vw);
+    width: min(11.875rem, 58vw);
   }
 
   .contact-links {
@@ -628,28 +871,46 @@ h2 {
 
   .chip-link {
     width: 100%;
+    min-height: var(--touch-min);
     justify-content: center;
+    /* Keep every label on one line so the two grid rows stay level */
+    font-size: 0.8125rem;
+    padding-inline: 0.75rem;
+  }
+
+  .paper-links a {
+    min-height: 2.375rem;
+    padding: 0.25rem 1rem;
   }
 
   .paper-content {
-    padding: 1rem 1rem 1.1rem;
+    padding: 1rem 1rem 1.125rem;
   }
 
   .papertitle {
-    font-size: 1.02rem;
+    font-size: 1rem;
   }
 
   .paper-authors,
   .paper-venue,
   .paper-links,
   .paper-summary {
-    font-size: 0.9rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* ---------- Print ---------- */
+@media print {
+  body::before,
+  .theme-toggle,
+  .skip-link {
+    display: none;
   }
 
-  .theme-toggle {
-    top: 0.8rem;
-    right: 0.8rem;
-    width: 38px;
-    height: 38px;
+  .hero-card,
+  .news-item,
+  .paper-card {
+    box-shadow: none;
+    border-color: #ccc;
   }
 }

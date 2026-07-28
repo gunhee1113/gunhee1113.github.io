@@ -6,16 +6,13 @@
     <meta name="author" content="Gunhee Kim">
     <meta name="description" content="Gunhee Kim - Computer vision research in 3D/4D reconstruction and object 6D pose estimation.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0b0e16" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">
     <link rel="icon" type="image/x-icon" href="images/favicon/favicon.ico">
     <link rel="manifest" href="images/favicon/site.webmanifest">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" type="text/css" href="stylesheet.css">
     <script>
       // Apply the saved / preferred theme before paint to avoid a flash.
@@ -31,7 +28,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <button class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <button class="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
       </svg>
@@ -138,7 +135,7 @@
                 <a href="https://nagooon.github.io/">Jeonghyeon Na</a>,
                 <a href="https://jhugestar.github.io/">Hanbyul Joo</a>
               </p>
-              <p class="paper-venue"><em class="venue-preprint">arXiv</em>, 2026</p>
+              <p class="paper-venue"><span class="venue-badge is-preprint">arXiv 2026</span></p>
               <p class="paper-links">
                 <a href="https://junc0ng.github.io/omnirobothome/">Project Page</a>
                 <a href="https://arxiv.org/abs/2604.28197">arXiv</a>
@@ -178,7 +175,7 @@
                 <a href="https://jongbinlim.github.io">Jongbin Lim</a>,
                 <a href="https://jhugestar.github.io/">Hanbyul Joo</a>
               </p>
-              <p class="paper-venue"><em class="venue-preprint">arXiv</em>, 2026</p>
+              <p class="paper-venue"><span class="venue-badge is-preprint">arXiv 2026</span></p>
               <p class="paper-links">
                 <a href="https://willi19.github.io/AutoDex/">Project Page</a>
                 <a href="https://arxiv.org/abs/2606.23689">arXiv</a>
@@ -208,7 +205,7 @@
                 <a href="https://willi19.github.io/">Mingi Choi</a>,
                 <a href="https://jhugestar.github.io/">Hanbyul Joo</a>
               </p>
-              <p class="paper-venue"><em class="venue-accepted">ECCV</em>, 2026</p>
+              <p class="paper-venue"><span class="venue-badge is-accepted">ECCV 2026</span></p>
               <p class="paper-links">
                 <a href="https://tlb-miss.github.io/vlmpose/">Project Page</a>
                 <a href="https://arxiv.org/abs/2604.09781">arXiv</a>
@@ -238,7 +235,7 @@
                 Wonjae Roh,
                 <a href="https://cv.snu.ac.kr/index.php/bhhan/">Bohyung Han</a>
               </p>
-              <p class="paper-venue"><em class="venue-accepted">CVPR</em>, 2026</p>
+              <p class="paper-venue"><span class="venue-badge is-accepted">CVPR 2026</span></p>
               <p class="paper-links">
                 <a href="https://cv.snu.ac.kr/research/PhysGaia/">Project Page</a>
                 <a href="https://arxiv.org/abs/2506.02794">arXiv</a>
@@ -265,9 +262,11 @@
         var root = document.documentElement;
         var btn = document.querySelector(".theme-toggle");
         if (btn) {
+          btn.setAttribute("aria-pressed", String(root.getAttribute("data-theme") === "dark"));
           btn.addEventListener("click", function () {
             var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
             root.setAttribute("data-theme", next);
+            btn.setAttribute("aria-pressed", String(next === "dark"));
             try { localStorage.setItem("theme", next); } catch (e) {}
           });
         }
