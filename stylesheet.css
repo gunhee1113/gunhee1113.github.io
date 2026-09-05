@@ -515,7 +515,7 @@ h2 {
   line-height: var(--lead-small);
   text-transform: uppercase;
   letter-spacing: var(--track-caps);
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .news-item p {
@@ -698,7 +698,7 @@ h2 {
   line-height: var(--lead-small);
   letter-spacing: var(--track-small);
   text-align: center;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 /* ---------- Reveal on load ---------- */
@@ -807,6 +807,14 @@ h2 {
 }
 
 /* ---------- Responsive ---------- */
+/* Below ~1080px the fixed toggle would land on the hero card's corner, so
+   push the page down far enough to clear it (1rem + 44px + breathing room). */
+@media (max-width: 68.75rem) {
+  .page-shell {
+    margin-top: 4.5rem;
+  }
+}
+
 @media (max-width: 53.75rem) {
   .hero-card {
     grid-template-columns: 1fr;
@@ -831,9 +839,13 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  /* Full-width media keeps the square teasers whole — cover-cropping them to a
+     letterbox was cutting the hand and arm out of the robot teasers. */
   .paper-media img,
   .paper-media video {
-    max-height: 16.25rem;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: none;
   }
 
   .news-item {
@@ -846,7 +858,7 @@ h2 {
 @media (max-width: 33.75rem) {
   .page-shell {
     width: min(var(--maxw), calc(100% - 1.375rem));
-    margin-top: 1.375rem;
+    margin-top: 4.25rem;
   }
 
   .hero-card {
