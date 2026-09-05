@@ -738,6 +738,11 @@ h2 {
   color: var(--text);
 }
 
+/* Work names carry the same semibold as the highlighted author name */
+.news-item strong {
+  font-weight: 600;
+}
+
 /* ---------- Research / papers ---------- */
 .paper-card {
   display: grid;
