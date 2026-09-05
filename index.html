@@ -45,6 +45,7 @@
       </svg>
     </button>
     <div class="page-shell">
+      <div class="orb orb-a" aria-hidden="true"></div>
       <header class="hero-card reveal">
         <div class="hero-text">
           <p class="eyebrow">MS/PhD Student &middot; Computer Vision</p>
@@ -301,11 +302,68 @@
         }
 
         // Respect users who prefer reduced motion: stop the looping teaser videos.
-        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion) {
           document.querySelectorAll("video[autoplay]").forEach(function (v) {
             v.removeAttribute("autoplay");
             v.pause();
           });
+        }
+
+        // The glass reacts to light. The pointer is a single light source: each
+        // panel gets a specular spot at the pointer's position in its own
+        // coordinates, so panels near the cursor catch it at their edge, and
+        // the orb drifts with a little parallax. Fine pointers only — on touch
+        // there is no hover to react to. Parallax stays still under reduced
+        // motion; the spot is static feedback, so it stays.
+        var finePointer = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+        if (finePointer) {
+          var panels = Array.prototype.slice.call(document.querySelectorAll(".hero-card, .news-list, .paper-card"));
+          var orb = document.querySelector(".orb");
+          var px = -1, py = -1;               // pointer, viewport coords (-1 = none)
+          var ox = 0, oy = 0, tx = 0, ty = 0; // orb offset: current / target
+          var frame = 0;
+
+          function paint() {
+            frame = 0;
+            if (px >= 0) {
+              for (var i = 0; i < panels.length; i++) {
+                var r = panels[i].getBoundingClientRect();
+                panels[i].style.setProperty("--mx", (px - r.left) + "px");
+                panels[i].style.setProperty("--my", (py - r.top) + "px");
+              }
+            }
+            if (orb && !reduceMotion) {
+              // Ease toward the target from the current value, never from the
+              // target — so a new pointer position redirects mid-motion (§3).
+              ox += (tx - ox) * 0.1;
+              oy += (ty - oy) * 0.1;
+              orb.style.transform = "translate3d(" + ox.toFixed(2) + "px, " +
+                (oy - window.scrollY * 0.06).toFixed(2) + "px, 0)";
+              if (Math.abs(tx - ox) > 0.05 || Math.abs(ty - oy) > 0.05) {
+                frame = requestAnimationFrame(paint);
+              }
+            }
+          }
+          function schedule() {
+            if (!frame) frame = requestAnimationFrame(paint);
+          }
+
+          document.addEventListener("pointermove", function (e) {
+            px = e.clientX;
+            py = e.clientY;
+            tx = (e.clientX / window.innerWidth - 0.5) * 24;
+            ty = (e.clientY / window.innerHeight - 0.5) * 16;
+            schedule();
+          }, { passive: true });
+          document.addEventListener("pointerleave", function () {
+            px = py = -1;
+            panels.forEach(function (p) {
+              p.style.removeProperty("--mx");
+              p.style.removeProperty("--my");
+            });
+          });
+          window.addEventListener("scroll", schedule, { passive: true });
         }
       })();
     </script>

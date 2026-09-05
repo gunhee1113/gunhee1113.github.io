@@ -1,86 +1,121 @@
 /* ==========================================================================
-   Gunhee Kim — personal site
+   Gunhee Kim — personal site · Liquid Glass
 
-   Built against the apple-design principles (WWDC "Designing Fluid
-   Interfaces" / "The Details of UI Typography"):
-     - feedback lives on pointer-down, never only on release
-     - tracking and leading are size-specific, never one value for all sizes
-     - the system font ships its own optical sizing — use it unless there's
-       a reason not to
-     - spacing in rem so layout scales with the user's text-size setting
-     - floating chrome is a translucent material, not an opaque strip
-     - respect reduced-motion, reduced-transparency, and high-contrast
+   The page is a stack of translucent glass panels floating over a soft,
+   colourful ambient field. Built against the apple-design principles:
+     - materials carry hierarchy (§12): one thick hero slab, thinner panels
+       for lists, tinted fills — never glass-on-glass — for controls
+     - the glass shows a specular rim and a soft top-left sheen, so it
+       reads as a material catching light, not a grey box with blur on it
+     - feedback lives on pointer-down; containers that aren't links don't
+       move on hover (motion should mean something)
+     - tracking and leading are size-specific (§15); system font only
+     - spacing in rem; reduced-motion / -transparency / contrast honoured
    ========================================================================== */
 
 /* ---------- Design tokens ---------- */
 :root {
   color-scheme: light;
 
-  /* Surfaces — Apple's neutral grays; color is never the point */
-  --bg: #fbfbfd;
-  --bg-glow: rgba(105, 118, 145, 0.07);
-  --surface: #ffffff;
-  --surface-2: #f5f5f7;
+  /* Ambient field: a pale ground with four colour pools, a film grain so
+     it prints like a poster rather than a screen gradient, and a faint dot
+     field — a nod to the point clouds this page's research lives in. */
+  --bg: #e9edf8;
+  --field: linear-gradient(160deg, #dde8ff 0%, #ebe2fb 38%, #fbe6dc 70%, #daf2ea 100%);
+  --blob-1: rgba(112, 162, 255, 0.64);   /* sky */
+  --blob-2: rgba(190, 140, 255, 0.52);   /* lavender */
+  --blob-3: rgba(255, 168, 128, 0.46);   /* peach */
+  --blob-4: rgba(110, 224, 200, 0.46);   /* mint */
+  --blob-5: rgba(255, 150, 190, 0.28);   /* rose, mid-page */
+  /* One accent gradient, used once: the name. Ink into indigo into violet. */
+  --ink-gradient: linear-gradient(110deg, #141420 0%, #233a86 48%, #5b2f9b 100%);
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --dot: rgba(20, 24, 60, 0.16);
+  --orb-base: rgba(255, 255, 255, 0.08);
+  --orb-tint: rgba(112, 162, 255, 0.4);
+  --orb-rim: rgba(255, 255, 255, 0.72);
+  /* The pointer is a light source; this is how bright its spot is on glass */
+  --glass-spot: rgba(255, 255, 255, 0.5);
 
-  /* Labels — primary / secondary / tertiary, mirroring Apple's semantics */
-  --text: #1d1d1f;
-  --muted: #6e6e73;
-  --faint: #86868b;
+  /* Labels — a touch darker than Apple's flat greys, because they sit on
+     glass over colour rather than on white (vibrancy, §12) */
+  --text: #17171a;
+  --muted: #5b5b61;
+  --faint: #7a7a80;
 
-  /* Separators are alpha, not solid, so they sit on any surface */
-  --line: rgba(0, 0, 0, 0.08);
-  --line-strong: rgba(0, 0, 0, 0.14);
+  --line: rgba(20, 20, 30, 0.08);
+  --line-strong: rgba(20, 20, 30, 0.14);
 
-  --brand: #0066cc;
-  --brand-strong: #004e9e;
+  /* A step darker than Apple's link blue: it has to clear 4.5:1 on tinted
+     glass over the brightest pool, not on white. */
+  --brand: #0a5bc4;
+  --brand-strong: #084a9e;
   --brand-contrast: #ffffff;
-  --brand-soft: rgba(0, 102, 204, 0.08);
+  --brand-soft: rgba(10, 91, 196, 0.1);
 
-  /* Venue badges. Every pairing below clears WCAG AA (4.5:1) at 12px —
-     these are small text, so they don't qualify for the large-text 3:1 rule. */
-  --badge-accepted-bg: rgba(0, 102, 204, 0.08);
-  --badge-accepted-line: rgba(0, 102, 204, 0.22);
+  --badge-accepted-bg: rgba(10, 91, 196, 0.1);
+  --badge-accepted-line: rgba(10, 91, 196, 0.24);
 
-  /* Translucent material for floating chrome (§12) */
-  --material: rgba(255, 255, 255, 0.72);
-  --material-edge: rgba(255, 255, 255, 0.8);
-  --material-blur: blur(20px) saturate(180%);
+  /* Glass. Two weights: the hero slab is thicker (more opaque, more blur,
+     deeper shadow); panels and cards are the regular material. */
+  --glass: rgba(255, 255, 255, 0.56);
+  --glass-thick: rgba(255, 255, 255, 0.66);
+  --glass-blur: blur(30px) saturate(180%);
+  --glass-blur-thick: blur(44px) saturate(190%);
+  --glass-edge: rgba(255, 255, 255, 0.55);
+  /* Specular rim: bright where light hits (top-left), dim at the bottom, with
+     a faint iridescent shift (blue → rose) the way real glass splits light */
+  --glass-rim: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(190, 215, 255, 0.7) 22%,
+    rgba(255, 255, 255, 0.3) 45%,
+    rgba(255, 205, 225, 0.35) 62%,
+    rgba(255, 255, 255, 0.15) 78%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
+  /* Sheen: a soft highlight pooling in the top-left corner */
+  --glass-sheen: radial-gradient(
+    120% 70% at 18% 0%,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0) 60%
+  );
+  --glass-shadow: 0 1px 1px rgba(20, 20, 40, 0.04), 0 12px 32px rgba(20, 20, 40, 0.08);
+  --glass-shadow-thick: 0 2px 2px rgba(20, 20, 40, 0.04), 0 24px 60px rgba(20, 20, 40, 0.12);
 
-  /* Bigger surfaces read as thicker: more blur, deeper shadow */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.05), 0 10px 28px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.06), 0 20px 48px rgba(0, 0, 0, 0.1);
+  /* Tinted fills for controls that sit on glass (never glass on glass) */
+  --fill: rgba(20, 20, 30, 0.055);
+  --fill-strong: rgba(20, 20, 30, 0.09);
 
-  /* Radii in rem so they grow with the user's text size */
-  --radius-xl: 1.5rem;
-  --radius-lg: 1.125rem;
-  --radius-md: 0.75rem;
-  --radius-sm: 0.625rem;
+  /* Radii — large and continuous-feeling, nested concentrically */
+  --radius-xl: 2rem;
+  --radius-lg: 1.625rem;
+  --radius-md: 1.125rem;
+  --radius-sm: 0.875rem;
   --radius-pill: 999px;
 
   /* Tracking — negative as type grows, slightly positive as it shrinks (§15) */
-  --track-display: -0.022em;
-  --track-title: -0.015em;
-  --track-heading: -0.008em;
+  --track-display: -0.028em;
+  --track-title: -0.018em;
+  --track-heading: -0.01em;
   --track-body: 0em;
   --track-small: 0.008em;
-  --track-caps: 0.07em;
+  --track-caps: 0.08em;
 
   /* Leading — tight on large text, loose on body (§15) */
-  --lead-display: 1.05;
-  --lead-title: 1.15;
+  --lead-display: 1.02;
+  --lead-title: 1.12;
   --lead-heading: 1.3;
   --lead-body: 1.55;
   --lead-small: 1.45;
 
-  /* Motion. Critically damped settle — no overshoot, because nothing here
-     carries gesture momentum (§4). Reverse is the mirrored curve (§7). */
+  /* Motion — critically damped settle, mirrored on the way back (§4, §7) */
   --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-settle-reverse: cubic-bezier(1, 0, 0.68, 0.28);
   --dur-press: 100ms;
   --dur-fast: 200ms;
   --dur-color: 250ms;
-  --dur-enter: 400ms;
+  --dur-enter: 520ms;
 
   --maxw: 60rem;
   --touch-min: 2.75rem; /* 44px — Apple's minimum target */
@@ -90,35 +125,58 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #000000;
-  --bg-glow: rgba(120, 145, 200, 0.12);
-  --surface: #1c1c1e;
-  --surface-2: #2c2c2e;
+  --bg: #06070d;
+  --field: linear-gradient(160deg, #0a0d26 0%, #150b2c 38%, #1c1020 68%, #07191f 100%);
+  --blob-1: rgba(70, 92, 235, 0.58);
+  --blob-2: rgba(160, 80, 240, 0.45);
+  --blob-3: rgba(255, 120, 96, 0.26);
+  --blob-4: rgba(22, 176, 186, 0.4);
+  --blob-5: rgba(255, 120, 200, 0.15);
+  --ink-gradient: linear-gradient(110deg, #ffffff 0%, #cfe0ff 45%, #e6ccff 100%);
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --dot: rgba(255, 255, 255, 0.11);
+  --orb-base: rgba(255, 255, 255, 0.05);
+  --orb-tint: rgba(120, 140, 255, 0.32);
+  --orb-rim: rgba(255, 255, 255, 0.28);
+  --glass-spot: rgba(255, 255, 255, 0.09);
 
   --text: #f5f5f7;
-  --muted: rgba(235, 235, 245, 0.6);
-  --faint: rgba(235, 235, 245, 0.38);
+  --muted: rgba(235, 235, 245, 0.7);
+  --faint: rgba(235, 235, 245, 0.5);
 
   --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.2);
+  --line-strong: rgba(255, 255, 255, 0.18);
 
-  --brand: #2997ff;
-  --brand-strong: #6cb7ff;
-  --brand-contrast: #000000;
-  --brand-soft: rgba(41, 151, 255, 0.16);
+  --brand: #4da3ff;
+  --brand-strong: #8cc4ff;
+  --brand-contrast: #06131f;
+  --brand-soft: rgba(77, 163, 255, 0.16);
 
-  /* 12% rather than 16%: at 16% the tint lifts the backdrop enough to drop
-     the badge to 4.49:1, just under AA. */
-  --badge-accepted-bg: rgba(41, 151, 255, 0.12);
-  --badge-accepted-line: rgba(41, 151, 255, 0.3);
+  --badge-accepted-bg: rgba(77, 163, 255, 0.14);
+  --badge-accepted-line: rgba(77, 163, 255, 0.32);
 
-  --material: rgba(28, 28, 30, 0.72);
-  --material-edge: rgba(255, 255, 255, 0.12);
+  --glass: rgba(26, 26, 34, 0.56);
+  --glass-thick: rgba(26, 26, 34, 0.66);
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --glass-rim: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(160, 190, 255, 0.35) 22%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 170, 220, 0.18) 62%,
+    rgba(255, 255, 255, 0.05) 78%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
+  --glass-sheen: radial-gradient(
+    120% 70% at 18% 0%,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0) 60%
+  );
+  --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --glass-shadow-thick: 0 2px 2px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.55);
 
-  /* On black, shadows barely read — separation comes from the borders */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+  --fill: rgba(255, 255, 255, 0.08);
+  --fill-strong: rgba(255, 255, 255, 0.13);
 }
 
 /* Dark theme — automatic fallback when JS is disabled */
@@ -126,32 +184,58 @@
   :root:not([data-theme]) {
     color-scheme: dark;
 
-    --bg: #000000;
-    --bg-glow: rgba(120, 145, 200, 0.12);
-    --surface: #1c1c1e;
-    --surface-2: #2c2c2e;
+    --bg: #06070d;
+    --field: linear-gradient(160deg, #0a0d26 0%, #150b2c 38%, #1c1020 68%, #07191f 100%);
+    --blob-1: rgba(70, 92, 235, 0.58);
+    --blob-2: rgba(160, 80, 240, 0.45);
+    --blob-3: rgba(255, 120, 96, 0.26);
+    --blob-4: rgba(22, 176, 186, 0.4);
+    --blob-5: rgba(255, 120, 200, 0.15);
+    --ink-gradient: linear-gradient(110deg, #ffffff 0%, #cfe0ff 45%, #e6ccff 100%);
+    --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    --dot: rgba(255, 255, 255, 0.11);
+    --orb-base: rgba(255, 255, 255, 0.05);
+    --orb-tint: rgba(120, 140, 255, 0.32);
+    --orb-rim: rgba(255, 255, 255, 0.28);
+    --glass-spot: rgba(255, 255, 255, 0.09);
 
     --text: #f5f5f7;
-    --muted: rgba(235, 235, 245, 0.6);
-    --faint: rgba(235, 235, 245, 0.38);
+    --muted: rgba(235, 235, 245, 0.7);
+    --faint: rgba(235, 235, 245, 0.5);
 
     --line: rgba(255, 255, 255, 0.1);
-    --line-strong: rgba(255, 255, 255, 0.2);
+    --line-strong: rgba(255, 255, 255, 0.18);
 
-    --brand: #2997ff;
-    --brand-strong: #6cb7ff;
-    --brand-contrast: #000000;
-    --brand-soft: rgba(41, 151, 255, 0.16);
+    --brand: #4da3ff;
+    --brand-strong: #8cc4ff;
+    --brand-contrast: #06131f;
+    --brand-soft: rgba(77, 163, 255, 0.16);
 
-    --badge-accepted-bg: rgba(41, 151, 255, 0.12);
-    --badge-accepted-line: rgba(41, 151, 255, 0.3);
+    --badge-accepted-bg: rgba(77, 163, 255, 0.14);
+    --badge-accepted-line: rgba(77, 163, 255, 0.32);
 
-    --material: rgba(28, 28, 30, 0.72);
-    --material-edge: rgba(255, 255, 255, 0.12);
+    --glass: rgba(26, 26, 34, 0.56);
+    --glass-thick: rgba(26, 26, 34, 0.66);
+    --glass-edge: rgba(255, 255, 255, 0.12);
+    --glass-rim: linear-gradient(
+      140deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(160, 190, 255, 0.35) 22%,
+      rgba(255, 255, 255, 0.1) 45%,
+      rgba(255, 170, 220, 0.18) 62%,
+      rgba(255, 255, 255, 0.05) 78%,
+      rgba(255, 255, 255, 0.25) 100%
+    );
+    --glass-sheen: radial-gradient(
+      120% 70% at 18% 0%,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0) 60%
+    );
+    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.45);
+    --glass-shadow-thick: 0 2px 2px rgba(0, 0, 0, 0.4), 0 24px 60px rgba(0, 0, 0, 0.55);
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+    --fill: rgba(255, 255, 255, 0.08);
+    --fill-strong: rgba(255, 255, 255, 0.13);
   }
 }
 
@@ -164,6 +248,9 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  /* The decorative orbs bleed past the shell; never let them add a scrollbar */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -176,8 +263,6 @@ body {
   letter-spacing: var(--track-body);
   font-optical-sizing: auto;
   color: var(--text);
-  /* No background-attachment: fixed — it forces repaints and janks scroll
-     on mobile Safari (§11). */
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -185,19 +270,38 @@ body {
     color var(--dur-color) var(--ease-settle);
 }
 
-/* The ambient glow as its own fixed layer: no scroll cost, no repaint. */
+/* The ambient field the glass refracts. A fixed compositor layer (not
+   background-attachment: fixed, which repaints on every scroll frame).
+   Bleeds past the viewport so the pools never show a hard edge. Static on
+   purpose — slow drifting backgrounds are a vestibular trigger (§14). */
 body::before {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    var(--grain) 0 0 / 180px 180px repeat,
+    radial-gradient(42rem 34rem at 14% 6%, var(--blob-1), transparent 70%),
+    radial-gradient(38rem 30rem at 86% 14%, var(--blob-2), transparent 70%),
+    radial-gradient(44rem 36rem at 72% 82%, var(--blob-3), transparent 70%),
+    radial-gradient(34rem 30rem at 16% 90%, var(--blob-4), transparent 70%),
+    radial-gradient(36rem 28rem at 48% 46%, var(--blob-5), transparent 70%),
+    var(--field);
+  background-color: var(--bg);
+  transition: background var(--dur-color) var(--ease-settle);
+}
+
+/* Dot field, densest behind the hero and dissolving downwards */
+body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(
-    68.75rem 32.5rem at 50% -12%,
-    var(--bg-glow),
-    transparent 70%
-  );
-  transition: background var(--dur-color) var(--ease-settle);
+  background: radial-gradient(circle, var(--dot) 1px, transparent 1.6px) 0 0 / 1.75rem 1.75rem;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 0%, #000 20%, transparent 100%);
+  mask-image: radial-gradient(70% 60% at 50% 0%, #000 20%, transparent 100%);
 }
 
 a {
@@ -214,7 +318,7 @@ a:focus-visible {
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
-  border-radius: 0.3125rem;
+  border-radius: 0.375rem;
 }
 
 /* Interactive elements own their press feedback, so suppress the platform's
@@ -223,6 +327,82 @@ a,
 button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* ---------- Glass material ----------
+   Applied to the hero, the news panel, the paper cards and the toggle.
+   Three layers: the sheen + tinted, blurred backdrop; a hairline edge; and a
+   1px gradient rim drawn by ::before and masked to the border ring. */
+.hero-card,
+.news-list,
+.paper-card,
+.theme-toggle {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-sheen), var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  transition: background-color var(--dur-color) var(--ease-settle),
+    border-color var(--dur-color) var(--ease-settle),
+    box-shadow var(--dur-color) var(--ease-settle);
+}
+
+.hero-card::before,
+.news-list::before,
+.paper-card::before,
+.theme-toggle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* The pointer's light on the glass. Sits above the panel's background and
+   below its content (negative z-index inside the isolated context). Parked
+   far off-panel until the script places it, so nothing shows without a
+   pointer. */
+.hero-card::after,
+.news-list::after,
+.paper-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    20rem circle at var(--mx, -100rem) var(--my, -100rem),
+    var(--glass-spot),
+    transparent 65%
+  );
+}
+
+/* Browsers without backdrop-filter get a near-solid panel instead of a
+   see-through one (text over the colour pools would be unreadable). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hero-card,
+  .news-list,
+  .paper-card,
+  .theme-toggle {
+    background: var(--glass-sheen), rgba(255, 255, 255, 0.92);
+  }
+
+  :root[data-theme="dark"] .hero-card,
+  :root[data-theme="dark"] .news-list,
+  :root[data-theme="dark"] .paper-card,
+  :root[data-theme="dark"] .theme-toggle {
+    background: var(--glass-sheen), rgba(26, 26, 34, 0.94);
+  }
 }
 
 /* ---------- Skip link (keyboard users) ---------- */
@@ -248,7 +428,7 @@ button {
   outline: none;
 }
 
-/* ---------- Theme toggle — a translucent material, not an opaque chip ----- */
+/* ---------- Theme toggle — a small glass lens ---------- */
 .theme-toggle {
   position: fixed;
   top: 1rem;
@@ -260,25 +440,16 @@ button {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  /* Bright top edge reads as light catching the material (§12) */
-  border-top-color: var(--material-edge);
-  background: var(--material);
-  -webkit-backdrop-filter: var(--material-blur);
-  backdrop-filter: var(--material-blur);
   color: var(--text);
-  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-settle-reverse),
     color var(--dur-color) var(--ease-settle),
-    border-color var(--dur-color) var(--ease-settle);
+    box-shadow var(--dur-color) var(--ease-settle);
 }
 
 .theme-toggle:hover,
 .theme-toggle:focus-visible {
   color: var(--brand);
-  border-color: var(--brand);
-  /* No rotation flourish — restraint. Motion should mean something. */
   transform: translateY(-1px);
   transition-timing-function: var(--ease-settle);
 }
@@ -313,24 +484,64 @@ button {
   position: relative;
 }
 
-/* ---------- Hero ---------- */
+/* Content sits above the decorative orbs */
+.page-shell > header,
+.page-shell > main,
+.page-shell > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Orb — a glass droplet behind the hero ----------
+   Pure decoration: a lens over the colour field with a specular highlight
+   top-left and a tinted caustic bottom-right. It peeks out from behind the
+   hero slab so the page reads as layered material, not flat cards, and the
+   script gives it a little pointer/scroll parallax. */
+.orb {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  background:
+    radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.18) 34%, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(circle at 72% 78%, var(--orb-tint), transparent 62%),
+    var(--orb-base);
+  /* Rim, then a hair of chromatic aberration (cool top-left, warm bottom-
+     right), then the inner glow and the drop shadow */
+  box-shadow: inset 0 0 0 1px var(--orb-rim),
+    inset 1px 1px 0 1px rgba(120, 200, 255, 0.28),
+    inset -1px -1px 0 1px rgba(255, 130, 170, 0.22),
+    inset -0.75rem -1.125rem 2.5rem rgba(255, 255, 255, 0.22),
+    0 2rem 4rem rgba(20, 20, 40, 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+
+.orb-a {
+  width: 19rem;
+  height: 19rem;
+  top: -5rem;
+  right: -5.5rem;
+}
+
+/* ---------- Hero — the thick slab ---------- */
 .hero-card {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 2.25rem;
   align-items: center;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
+  padding: clamp(1.75rem, 3.4vw, 2.75rem);
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-lg);
-  transition: background-color var(--dur-color) var(--ease-settle),
-    border-color var(--dur-color) var(--ease-settle);
+  background: var(--glass-sheen), var(--glass-thick);
+  -webkit-backdrop-filter: var(--glass-blur-thick);
+  backdrop-filter: var(--glass-blur-thick);
+  box-shadow: var(--glass-shadow-thick);
 }
 
 /* Small text takes slightly positive tracking to stay legible (§15) */
 .eyebrow {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.625rem;
   font-size: 0.75rem;
   line-height: var(--lead-small);
   text-transform: uppercase;
@@ -340,11 +551,23 @@ button {
 }
 
 .name {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.875rem;
   font-weight: 700;
-  font-size: clamp(2.25rem, 4.4vw, 3.25rem);
+  font-size: clamp(2.375rem, 4.8vw, 3.5rem);
   line-height: var(--lead-display);
   letter-spacing: var(--track-display);
+  color: var(--text);
+}
+
+/* Gradient ink, only where the browser can clip it to the glyphs */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .name {
+    display: inline-block; /* so the gradient spans the word, not the row */
+    background: var(--ink-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .bio {
@@ -360,30 +583,29 @@ button {
 }
 
 .contact-links {
-  margin-top: 1.375rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
+/* Controls on glass are tinted fills, not more glass (§12) */
 .chip-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4375rem;
   min-height: 2.25rem;
-  padding: 0.4375rem 0.9375rem;
+  padding: 0.4375rem 1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
+  border: 1px solid transparent;
+  background: var(--fill);
   font-size: 0.875rem;
   line-height: var(--lead-small);
   letter-spacing: var(--track-small);
   font-weight: 500;
   white-space: nowrap;
   color: var(--text);
-  box-shadow: var(--shadow-sm);
   transition: transform var(--dur-fast) var(--ease-settle-reverse),
-    border-color var(--dur-color) var(--ease-settle),
     color var(--dur-color) var(--ease-settle),
     background-color var(--dur-color) var(--ease-settle);
 }
@@ -392,13 +614,12 @@ button {
   width: 0.9375rem;
   height: 0.9375rem;
   flex: none;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .chip-link:hover,
 .chip-link:focus-visible {
   color: var(--brand);
-  border-color: var(--brand);
   background: var(--brand-soft);
   transform: translateY(-1px);
   transition-timing-function: var(--ease-settle);
@@ -414,12 +635,8 @@ button {
   width: min(17.5rem, 100%);
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  box-shadow: var(--shadow-md);
-  transition: transform var(--dur-enter) var(--ease-settle);
-}
-
-.hero-photo-wrap:hover {
-  transform: translateY(-3px);
+  /* A glass ring around the portrait, then the drop shadow */
+  box-shadow: 0 0 0 5px var(--glass-edge), 0 16px 40px rgba(20, 20, 40, 0.16);
 }
 
 .hero-photo {
@@ -433,14 +650,14 @@ button {
 
 /* ---------- Sections ---------- */
 .section {
-  margin-top: 2.75rem;
+  margin-top: 3rem;
 }
 
 .section-head {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.125rem;
+  margin: 0 0.25rem 1.125rem;
 }
 
 /* A separator that fades out rather than ruling all the way across */
@@ -453,60 +670,33 @@ button {
 
 h2 {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   font-size: clamp(1.5rem, 2.4vw, 1.875rem);
   line-height: var(--lead-title);
   letter-spacing: var(--track-title);
 }
 
-/* ---------- News ---------- */
+/* ---------- News — one panel, hairline rows ----------
+   Four one-line facts don't each earn a card; one sheet of glass with
+   dividers keeps the list quiet and lets the papers carry the weight. */
 .news-list {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.625rem;
+  padding: 0.25rem 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .news-item {
-  position: relative;
   display: grid;
   grid-template-columns: 6.5rem 1fr;
   gap: 0.875rem;
   align-items: baseline;
-  padding: 0.875rem 1.0625rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  transition: transform var(--dur-fast) var(--ease-settle-reverse),
-    box-shadow var(--dur-fast) var(--ease-settle),
-    border-color var(--dur-color) var(--ease-settle),
-    background-color var(--dur-color) var(--ease-settle);
+  padding: 0.9375rem 1.375rem;
 }
 
-.news-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--brand);
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-settle);
-}
-
-.news-item:hover {
-  transform: translateX(2px);
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-md);
-  transition-timing-function: var(--ease-settle);
-}
-
-.news-item:hover::before {
-  opacity: 1;
+.news-item + .news-item {
+  border-top: 1px solid var(--line);
 }
 
 .news-date {
@@ -516,6 +706,7 @@ h2 {
   text-transform: uppercase;
   letter-spacing: var(--track-caps);
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .news-item p {
@@ -531,34 +722,19 @@ h2 {
   grid-template-columns: 14.5rem 1fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-sm);
-  background: var(--surface);
-  transition: transform var(--dur-fast) var(--ease-settle-reverse),
-    box-shadow var(--dur-fast) var(--ease-settle),
-    border-color var(--dur-color) var(--ease-settle),
-    background-color var(--dur-color) var(--ease-settle);
 }
 
 .paper-card + .paper-card {
   margin-top: 1.25rem;
 }
 
-.paper-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-lg);
-  transition-timing-function: var(--ease-settle);
-}
-
+/* The teaser is a tile inset in the glass, not a separate grey gutter */
 .paper-media {
-  background: var(--surface-2);
-  padding: 0.875rem;
+  padding: 0.875rem 0 0.875rem 0.875rem;
   display: flex;
-  transition: background-color var(--dur-color) var(--ease-settle);
 }
 
-/* Concentric radii: inner + padding ≈ outer (0.625 + 0.875 ≈ 1.125rem) */
+/* Concentric radii: inner + padding ≈ outer (0.875 + 0.875 ≈ 1.625rem) */
 .paper-media img,
 .paper-media video {
   width: 100%;
@@ -568,14 +744,16 @@ h2 {
   object-position: center;
   border-radius: var(--radius-sm);
   display: block;
+  /* Hairline keeps light frames from dissolving into light glass */
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .paper-media video {
-  background: var(--surface-2);
+  background: var(--fill);
 }
 
 .paper-content {
-  padding: 1.125rem 1.3125rem 1.25rem;
+  padding: 1.125rem 1.375rem 1.25rem;
 }
 
 .papertitle {
@@ -604,8 +782,24 @@ h2 {
   line-height: var(--lead-body);
 }
 
+/* Author names stay in the text colour so the action pills own the blue */
 .paper-authors {
   color: var(--muted);
+}
+
+.paper-authors a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.15em;
+  transition: color var(--dur-fast) var(--ease-settle),
+    text-decoration-color var(--dur-fast) var(--ease-settle);
+}
+
+.paper-authors a:hover,
+.paper-authors a:focus-visible {
+  color: var(--brand);
+  text-decoration-color: currentColor;
 }
 
 .paper-authors strong {
@@ -614,7 +808,7 @@ h2 {
 }
 
 /* Venue line — metadata is a squared badge, actions are pills. Shape carries
-   the distinction, so the venue never reads as a link the way colored text did. */
+   the distinction, so the venue never reads as a link. */
 .paper-venue {
   display: flex;
   align-items: center;
@@ -625,8 +819,8 @@ h2 {
 .venue-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.1875rem 0.5rem;
-  border-radius: 0.3125rem;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: 0.5rem;
   border: 1px solid transparent;
   font-size: 0.75rem;
   font-weight: 600;
@@ -643,8 +837,7 @@ h2 {
 
 .venue-badge.is-preprint {
   color: var(--muted);
-  background: transparent;
-  border-color: var(--line-strong);
+  background: var(--fill);
 }
 
 .paper-links {
@@ -657,25 +850,22 @@ h2 {
   display: inline-flex;
   align-items: center;
   min-height: 1.875rem;
-  padding: 0.25rem 0.8125rem;
+  padding: 0.25rem 0.875rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: var(--surface-2);
+  background: var(--fill);
   font-size: 0.8125rem;
   line-height: var(--lead-small);
   letter-spacing: var(--track-small);
   font-weight: 500;
-  color: var(--muted);
+  color: var(--text);
   transition: transform var(--dur-fast) var(--ease-settle-reverse),
     background-color var(--dur-fast) var(--ease-settle),
-    border-color var(--dur-fast) var(--ease-settle),
     color var(--dur-fast) var(--ease-settle);
 }
 
 .paper-links a:hover,
 .paper-links a:focus-visible {
   background: var(--brand);
-  border-color: var(--brand);
   color: var(--brand-contrast);
   transition-timing-function: var(--ease-settle);
 }
@@ -691,7 +881,7 @@ h2 {
 
 /* ---------- Footer ---------- */
 .site-footer {
-  margin: 2.75rem 0 0.5rem;
+  margin: 3rem 0 0.5rem;
   padding-top: 1.375rem;
   border-top: 1px solid var(--line);
   font-size: 0.875rem;
@@ -701,25 +891,27 @@ h2 {
   color: var(--muted);
 }
 
-/* ---------- Reveal on load ---------- */
+/* ---------- Reveal on load ----------
+   Glass materialises: it scales up slightly as it fades in, so it arrives
+   as a surface rather than a plain opacity fade (§12). */
 .reveal {
   opacity: 0;
-  transform: translateY(0.75rem);
+  transform: translateY(0.875rem) scale(0.985);
   animation: reveal-in var(--dur-enter) var(--ease-settle) forwards;
 }
 
 .news-section.reveal {
-  animation-delay: 80ms;
+  animation-delay: 90ms;
 }
 
 .section.reveal {
-  animation-delay: 140ms;
+  animation-delay: 160ms;
 }
 
 @keyframes reveal-in {
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -741,15 +933,12 @@ h2 {
     transform: none !important;
   }
 
-  .hero-photo-wrap:hover,
   .theme-toggle:hover,
-  .chip-link:hover,
-  .news-item:hover,
-  .paper-card:hover {
+  .chip-link:hover {
     transform: none;
   }
 
-  /* Color feedback still reads without vestibular motion */
+  /* Colour feedback still reads without vestibular motion */
   .theme-toggle:active,
   .chip-link:active,
   .paper-links a:active {
@@ -759,50 +948,105 @@ h2 {
 }
 
 /* ---------- Transparency preference ----------
-   Frostier means solid: raise the opacity and drop the blur (§14). */
+   Frostier means solid: opaque panels, no blur, no colour pools (§14). */
 @media (prefers-reduced-transparency: reduce) {
+  body::before {
+    background: var(--bg);
+  }
+
+  body::after,
+  .orb,
+  .hero-card::after,
+  .news-list::after,
+  .paper-card::after {
+    display: none;
+  }
+
+  .hero-card,
+  .news-list,
+  .paper-card,
   .theme-toggle {
-    background: var(--surface);
+    background: #ffffff;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    border-top-color: var(--line-strong);
+    border-color: var(--line-strong);
+  }
+
+  :root[data-theme="dark"] .hero-card,
+  :root[data-theme="dark"] .news-list,
+  :root[data-theme="dark"] .paper-card,
+  :root[data-theme="dark"] .theme-toggle {
+    background: #1c1c1e;
   }
 }
 
 /* ---------- Contrast preference ----------
-   Near-solid backgrounds with defined, contrasting borders (§14). */
+   Solid backgrounds with defined, contrasting borders (§14). */
 @media (prefers-contrast: more) {
   :root {
-    --muted: #4b4b4f;
+    --muted: #444448;
     --faint: #5c5c60;
     --line: rgba(0, 0, 0, 0.28);
     --line-strong: rgba(0, 0, 0, 0.45);
-    --brand: #004e9e;
+    --brand: #084c9c;
     --brand-strong: #003a76;
+    --fill: rgba(0, 0, 0, 0.08);
   }
 
   :root[data-theme="dark"] {
-    --muted: rgba(235, 235, 245, 0.86);
+    --muted: rgba(235, 235, 245, 0.88);
     --faint: rgba(235, 235, 245, 0.72);
     --line: rgba(255, 255, 255, 0.3);
     --line-strong: rgba(255, 255, 255, 0.5);
-    --brand: #6cb7ff;
-    --brand-strong: #a6d2ff;
-  }
-
-  .theme-toggle {
-    background: var(--surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  .paper-links a {
-    border-color: var(--line-strong);
-    color: var(--text);
+    --brand: #8cc4ff;
+    --brand-strong: #b8dbff;
+    --fill: rgba(255, 255, 255, 0.14);
   }
 
   body::before {
+    background: var(--bg);
+  }
+
+  body::after,
+  .orb {
     display: none;
+  }
+
+  .hero-card,
+  .news-list,
+  .paper-card,
+  .theme-toggle {
+    background: #ffffff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line-strong);
+  }
+
+  :root[data-theme="dark"] .hero-card,
+  :root[data-theme="dark"] .news-list,
+  :root[data-theme="dark"] .paper-card,
+  :root[data-theme="dark"] .theme-toggle {
+    background: #1c1c1e;
+  }
+
+  .hero-card::before,
+  .news-list::before,
+  .paper-card::before,
+  .theme-toggle::before,
+  .hero-card::after,
+  .news-list::after,
+  .paper-card::after {
+    display: none;
+  }
+
+  .paper-links a,
+  .chip-link {
+    border-color: var(--line-strong);
+  }
+
+  .name {
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 }
 
@@ -835,8 +1079,19 @@ h2 {
     width: min(13.75rem, 60vw);
   }
 
+  .orb-a {
+    width: 13rem;
+    height: 13rem;
+    top: -3.5rem;
+    right: -4rem;
+  }
+
   .paper-card {
     grid-template-columns: 1fr;
+  }
+
+  .paper-media {
+    padding: 0.875rem 0.875rem 0;
   }
 
   /* Full-width media keeps the square teasers whole — cover-cropping them to a
@@ -862,8 +1117,8 @@ h2 {
   }
 
   .hero-card {
-    padding: 1.3125rem 1.0625rem 1.5rem;
-    border-radius: 1.25rem;
+    padding: 1.5rem 1.125rem 1.625rem;
+    border-radius: 1.75rem;
   }
 
   .name {
@@ -890,6 +1145,10 @@ h2 {
     padding-inline: 0.75rem;
   }
 
+  .news-item {
+    padding: 0.875rem 1.125rem;
+  }
+
   .paper-links a {
     min-height: 2.375rem;
     padding: 0.25rem 1rem;
@@ -914,15 +1173,34 @@ h2 {
 /* ---------- Print ---------- */
 @media print {
   body::before,
+  body::after,
+  .orb,
   .theme-toggle,
   .skip-link {
     display: none;
   }
 
   .hero-card,
-  .news-item,
+  .news-list,
   .paper-card {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     box-shadow: none;
     border-color: #ccc;
+  }
+
+  .hero-card::before,
+  .news-list::before,
+  .paper-card::before,
+  .hero-card::after,
+  .news-list::after,
+  .paper-card::after {
+    display: none;
+  }
+
+  .name {
+    background: none;
+    -webkit-text-fill-color: currentColor;
   }
 }
