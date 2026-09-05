@@ -313,16 +313,34 @@ a {
   .bio a:hover,
   .news-item a:hover,
   .site-footer a:hover,
-  .papertitle a:hover,
   .paper-authors a:hover,
   .bio a:focus-visible,
   .news-item a:focus-visible,
   .site-footer a:focus-visible,
-  .papertitle a:focus-visible,
   .paper-authors a:focus-visible {
     background: var(--accent-text);
     -webkit-background-clip: text;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+}
+
+/* Paper titles wrap. Clipping the gradient to the heading block (not the
+   inline link) keeps one horizontal colour mapping across both lines: each
+   line starts on the same blue and the shorter line just ends where it ends.
+   Browsers without :has() keep the solid hover colour from above. */
+@supports selector(:has(a)) and ((-webkit-background-clip: text) or (background-clip: text)) {
+  .papertitle:has(a:hover),
+  .papertitle:has(a:focus-visible) {
+    background: var(--accent-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .papertitle:has(a:hover) a,
+  .papertitle:has(a:focus-visible) a {
     -webkit-text-fill-color: transparent;
   }
 }
@@ -367,7 +385,7 @@ button {
 .theme-toggle::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -1px; /* over the border itself, so the ring is the edge */
   z-index: 2;
   border-radius: inherit;
   padding: 1px;
@@ -609,7 +627,7 @@ button {
 .venue-badge.is-accepted::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: inherit;
   padding: 1px;
   background: var(--accent-gradient);
@@ -689,7 +707,6 @@ h2 {
   margin: 0;
   padding: 0.25rem 0;
   border-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
 .news-item {
@@ -726,40 +743,18 @@ h2 {
   display: grid;
   grid-template-columns: 14.5rem 1fr;
   border-radius: var(--radius-lg);
-  overflow: hidden;
   transition: transform var(--dur-color) var(--ease-settle),
     box-shadow var(--dur-color) var(--ease-settle),
     background-color var(--dur-color) var(--ease-settle),
     border-color var(--dur-color) var(--ease-settle);
 }
 
-/* Hover: the card lifts a hair and its rim catches the light — the white rim
-   gives way to the iridescent one. Pointer devices only; a finger can't hover. */
-.paper-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--accent-gradient);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--dur-color) var(--ease-settle);
-}
-
+/* Hover: the card lifts a hair and its shadow deepens — motion only, the rim
+   stays as it is. Pointer devices only; a finger can't hover. */
 @media (hover: hover) and (pointer: fine) {
   .paper-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--glass-shadow-thick);
-  }
-
-  .paper-card:hover::after {
-    opacity: 1;
   }
 }
 
@@ -985,10 +980,6 @@ h2 {
     background: var(--bg);
   }
 
-  .paper-card::after {
-    display: none;
-  }
-
   .hero-card,
   .news-list,
   .paper-card,
@@ -1054,8 +1045,7 @@ h2 {
   .hero-card::before,
   .news-list::before,
   .paper-card::before,
-  .theme-toggle::before,
-  .paper-card::after {
+  .theme-toggle::before {
     display: none;
   }
 
@@ -1074,6 +1064,7 @@ h2 {
   .bio a:hover,
   .news-item a:hover,
   .site-footer a:hover,
+  .papertitle:has(a:hover),
   .papertitle a:hover,
   .paper-authors a:hover {
     background: none;
@@ -1214,8 +1205,7 @@ h2 {
 
   .hero-card::before,
   .news-list::before,
-  .paper-card::before,
-  .paper-card::after {
+  .paper-card::before {
     display: none;
   }
 
