@@ -17,9 +17,8 @@
 :root {
   color-scheme: light;
 
-  /* Ambient field: a pale ground with four colour pools, a film grain so
-     it prints like a poster rather than a screen gradient, and a faint dot
-     field — a nod to the point clouds this page's research lives in. */
+  /* Ambient field: a pale ground with soft colour pools and a film grain,
+     so it prints like a poster rather than a screen gradient. */
   --bg: #e9edf8;
   --field: linear-gradient(160deg, #dde8ff 0%, #ebe2fb 38%, #fbe6dc 70%, #daf2ea 100%);
   --blob-1: rgba(112, 162, 255, 0.64);   /* sky */
