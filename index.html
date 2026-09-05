@@ -30,14 +30,25 @@
             (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
           document.documentElement.setAttribute("data-theme", theme);
         } catch (e) {}
+        document.documentElement.classList.add("js");
       })();
     </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="accent-fill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" style="stop-color: var(--accent-1)"></stop>
+          <stop offset="0.52" style="stop-color: var(--accent-2)"></stop>
+          <stop offset="1" style="stop-color: var(--accent-3)"></stop>
+        </linearGradient>
+      </defs>
+    </svg>
     <button class="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        <path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"></path>
+        <path d="M18 2.5v3M16.5 4h3"></path>
       </svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="4"></circle>
@@ -45,7 +56,6 @@
       </svg>
     </button>
     <div class="page-shell">
-      <div class="orb orb-a" aria-hidden="true"></div>
       <header class="hero-card reveal">
         <div class="hero-text">
           <p class="eyebrow">MS/PhD Student &middot; Computer Vision</p>
@@ -58,7 +68,7 @@
           </p>
           <div class="contact-links">
             <a class="chip-link" href="mailto:gunhee2001@snu.ac.kr">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m2 6 10 7 10-7"></path></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="3.5"></rect><path d="m3.5 7.5 7.2 5.1a2.2 2.2 0 0 0 2.6 0l7.2-5.1"></path></svg>
               Email
             </a>
             <a class="chip-link" href="https://scholar.google.com/citations?hl=ko&user=vrvfy8gAAAAJ">
@@ -85,11 +95,11 @@
       </header>
 
       <main id="main">
-        <section class="section news-section reveal" aria-labelledby="news-title">
-          <div class="section-head">
+        <section class="section news-section" aria-labelledby="news-title">
+          <div class="section-head reveal">
             <h2 id="news-title">News</h2>
           </div>
-          <ul class="news-list">
+          <ul class="news-list reveal">
             <li class="news-item">
               <span class="news-date">Sep 2026</span>
               <p>Our work, AutoDex, got accepted to CoRL 2026.</p>
@@ -109,12 +119,12 @@
           </ul>
         </section>
 
-        <section class="section reveal" aria-labelledby="research-title">
-          <div class="section-head">
+        <section class="section" aria-labelledby="research-title">
+          <div class="section-head reveal">
             <h2 id="research-title">Research</h2>
           </div>
 
-          <article class="paper-card">
+          <article class="paper-card reveal">
             <div class="paper-media">
               <video
                 src="images/omnirobothome_teaser.mp4"
@@ -159,7 +169,7 @@
             </div>
           </article>
 
-          <article class="paper-card">
+          <article class="paper-card reveal">
             <div class="paper-media">
               <video
                 src="images/autodex_teaser.mp4"
@@ -201,7 +211,7 @@
             </div>
           </article>
 
-          <article class="paper-card">
+          <article class="paper-card reveal">
             <div class="paper-media">
               <video
                 src="images/vlmpose_teaser.mp4"
@@ -239,7 +249,7 @@
             </div>
           </article>
 
-          <article class="paper-card">
+          <article class="paper-card reveal">
             <div class="paper-media">
               <video
                 src="images/physgaia_teaser.mp4"
@@ -281,7 +291,7 @@
         </section>
       </main>
 
-      <footer class="site-footer">
+      <footer class="site-footer reveal">
         Template inspired by <a href="https://github.com/jonbarron/jonbarron_website">Jon Barron's website</a>.
       </footer>
     </div>
@@ -301,70 +311,89 @@
           });
         }
 
-        // Respect users who prefer reduced motion: stop the looping teaser videos.
         var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var hasObserver = "IntersectionObserver" in window;
+
+        // Panels materialise as they scroll into view; panels that arrive in
+        // the same frame stagger top-to-bottom. Without an observer (or with
+        // reduced motion) everything is simply shown.
+        var panels = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+        function land(el, delay) {
+          el.style.setProperty("--reveal-delay", delay + "ms");
+          el.classList.add("is-in");
+          // Hand the panel back to its own transitions once it has settled.
+          // transitionend is the signal; the timer is the safety net for the
+          // case where the transition never runs (tab hidden, style already
+          // final) so nothing can stay stuck in the reveal state.
+          var settled = false;
+          function done(e) {
+            if (settled || (e && (e.target !== el || e.propertyName !== "transform"))) return;
+            settled = true;
+            el.classList.add("is-done");
+            el.style.removeProperty("--reveal-delay");
+            el.removeEventListener("transitionend", done);
+          }
+          el.addEventListener("transitionend", done);
+          setTimeout(done, delay + 900);
+        }
+        if (hasObserver && !reduceMotion) {
+          var pending = panels.slice();
+          function reveal(list) {
+            list
+              .sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; })
+              .forEach(function (el, i) {
+                land(el, i * 90);
+                revealer.unobserve(el);
+                pending.splice(pending.indexOf(el), 1);
+              });
+            if (!pending.length) window.removeEventListener("scroll", sweep);
+          }
+          var revealer = new IntersectionObserver(function (entries) {
+            reveal(entries
+              .filter(function (entry) { return entry.isIntersecting && pending.indexOf(entry.target) >= 0; })
+              .map(function (entry) { return entry.target; }));
+          }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 });
+          panels.forEach(function (el) { revealer.observe(el); });
+          // The observer only reports state changes, so a panel that jumps from
+          // below the viewport to above it in one frame (anchor link, End key,
+          // restored scroll position) would never fire. Sweep for anything
+          // already scrolled past and show it at once.
+          var sweeping = 0;
+          function sweep() {
+            if (sweeping) return;
+            sweeping = requestAnimationFrame(function () {
+              sweeping = 0;
+              reveal(pending.filter(function (el) { return el.getBoundingClientRect().bottom < 0; }));
+            });
+          }
+          window.addEventListener("scroll", sweep, { passive: true });
+        } else {
+          panels.forEach(function (el) { el.classList.add("is-in", "is-done"); });
+        }
+
+        // Teasers only play while on screen — four loops at once is battery
+        // for nothing. Under reduced motion they stay on their poster frame.
+        var videos = document.querySelectorAll("video[autoplay]");
         if (reduceMotion) {
-          document.querySelectorAll("video[autoplay]").forEach(function (v) {
+          videos.forEach(function (v) {
             v.removeAttribute("autoplay");
             v.pause();
           });
-        }
-
-        // The glass reacts to light. The pointer is a single light source: each
-        // panel gets a specular spot at the pointer's position in its own
-        // coordinates, so panels near the cursor catch it at their edge, and
-        // the orb drifts with a little parallax. Fine pointers only — on touch
-        // there is no hover to react to. Parallax stays still under reduced
-        // motion; the spot is static feedback, so it stays.
-        var finePointer = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-        if (finePointer) {
-          var panels = Array.prototype.slice.call(document.querySelectorAll(".hero-card, .news-list, .paper-card"));
-          var orb = document.querySelector(".orb");
-          var px = -1, py = -1;               // pointer, viewport coords (-1 = none)
-          var ox = 0, oy = 0, tx = 0, ty = 0; // orb offset: current / target
-          var frame = 0;
-
-          function paint() {
-            frame = 0;
-            if (px >= 0) {
-              for (var i = 0; i < panels.length; i++) {
-                var r = panels[i].getBoundingClientRect();
-                panels[i].style.setProperty("--mx", (px - r.left) + "px");
-                panels[i].style.setProperty("--my", (py - r.top) + "px");
+        } else if (hasObserver) {
+          var player = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              var v = entry.target;
+              if (entry.isIntersecting) {
+                var p = v.play();
+                if (p && p.catch) p.catch(function () {});
+              } else {
+                v.pause();
               }
-            }
-            if (orb && !reduceMotion) {
-              // Ease toward the target from the current value, never from the
-              // target — so a new pointer position redirects mid-motion (§3).
-              ox += (tx - ox) * 0.1;
-              oy += (ty - oy) * 0.1;
-              orb.style.transform = "translate3d(" + ox.toFixed(2) + "px, " +
-                (oy - window.scrollY * 0.06).toFixed(2) + "px, 0)";
-              if (Math.abs(tx - ox) > 0.05 || Math.abs(ty - oy) > 0.05) {
-                frame = requestAnimationFrame(paint);
-              }
-            }
-          }
-          function schedule() {
-            if (!frame) frame = requestAnimationFrame(paint);
-          }
-
-          document.addEventListener("pointermove", function (e) {
-            px = e.clientX;
-            py = e.clientY;
-            tx = (e.clientX / window.innerWidth - 0.5) * 24;
-            ty = (e.clientY / window.innerHeight - 0.5) * 16;
-            schedule();
-          }, { passive: true });
-          document.addEventListener("pointerleave", function () {
-            px = py = -1;
-            panels.forEach(function (p) {
-              p.style.removeProperty("--mx");
-              p.style.removeProperty("--my");
             });
-          });
-          window.addEventListener("scroll", schedule, { passive: true });
+          }, { threshold: 0.2 });
+          videos.forEach(function (v) { player.observe(v); });
         }
+
       })();
     </script>
   </body>
